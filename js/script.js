@@ -142,31 +142,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     }
     const renderCard = () => {
-        new MenuCard('img/tabs/vegy.jpg',
-            'vegy',
-            'Меню "Фитнес"',
-            `Меню "Фитнес" - это новый подход к приготовлению блюд: больше
-                    свежих овощей и фруктов. Продукт активных и здоровых людей. Это
-                    абсолютно новый продукт с оптимальной ценой и высоким качеством!`,
-            '229',
-            '.menu .container').render()
-        new MenuCard('img/tabs/elite.jpg',
-            'elite',
-            'Меню “Премиум”',
-            `В меню “Премиум” мы используем не только красивый дизайн упаковки,
-            но и качественное исполнение блюд. Красная рыба, морепродукты,
-            фрукты - ресторанное меню без похода в ресторан!`,
-            '550',
-            '.menu .container').render()
-        new MenuCard('img/tabs/post.jpg',
-            'post',
-            'Меню "Постное"',
-            `Меню “Постное” - это тщательный подбор ингредиентов: полное
-            отсутствие продуктов животного происхождения, молоко из миндаля,
-            овса, кокоса или гречки, правильное количество белков за счет тофу
-            и импортных вегетарианских стейков.`,
-            '430',
-            '.menu .container').render()
+
+        const getResources = async (url) => {
+            const response = await fetch(url)
+            return await response.json()
+        }
+        getResources('http://localhost:3000/menu')
+            .then(data => {
+                data.forEach(({img,altimg,title,descr,price}) => {
+                    new MenuCard(img,altimg,title,descr,price).render()
+                })
+            })
     }
     renderCard()
     /* /CARD MODULE */
@@ -199,37 +185,30 @@ document.addEventListener('DOMContentLoaded', () => {
             closeModal()
         }, 2000)
     }
-
-    const postData = (form) => {
+    const postData = async (url, data) => {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: data
+        })
+        return await response.json()
+    }
+    const bindpostData = (form) => {
         form.addEventListener('submit', (e) => {
             e.preventDefault()
             form.querySelector('.btn').textContent = ''
             form.querySelector('.btn').innerHTML = `<img style="display: block, margin: 0 auto" src=${message.loading} alt='spinner'>`
             const data = new FormData(form)
-            const object = {}
-            data.forEach(function (value, key) {
-                object[key] = value
-            })
-            fetch('server.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(object)
-                })
-                .then(data => {
-                    console.log(data)
-                    showThanksModal(message.success)
-                })
-                .catch(() => {
-                    showThanksModal(message.failure)
-                })
-                .finally(() => {
-                    form.reset()
-                })
+            const json = JSON.stringify(Object.fromEntries(data.entries()))
+            postData('http://localhost:3000/requests', json)
+                .then(() => showThanksModal(message.success))
+                .catch(() => showThanksModal(message.failure))
+                .finally(() => form.reset())
         })
     }
-    formElements.forEach(item => postData(item))
+    formElements.forEach(item => bindpostData(item))
     /* /FORM MODULE */
 
 
