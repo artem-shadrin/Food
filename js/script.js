@@ -9,13 +9,13 @@ document.addEventListener('DOMContentLoaded', () => {
             item.classList.remove('show', 'fade')
         })
         tabs.forEach(item => {
-            item.classList.remove('tabheader__item_MODULE')
+            item.classList.remove('tabheader__item_active')
         })
     }
     const showTabContent = (item = 0) => {
         tabsContent[item].classList.add('show', 'fade')
         tabsContent[item].classList.remove('hide')
-        tabs[item].classList.add('tabheader__item_MODULE')
+        tabs[item].classList.add('tabheader__item_active')
     }
     hideTabContent()
     showTabContent()
@@ -33,8 +33,9 @@ document.addEventListener('DOMContentLoaded', () => {
     /* /TABS MODULE  */
 
     /* TIMER MODULE */
+    const addZero = number => number < 10 ? `0${number}` : number
     const timerElement = document.querySelector('.timer')
-    let endDate = new Date('2021', '3', '16')
+    let endDate = new Date('2021', '5', '16')
     const remainingDate = (endDate) => {
         const total = endDate - (new Date())
         return {
@@ -48,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const setClock = (timerNode, endDate) => {
         const changeDate = (container) => {
             const date = remainingDate(endDate)
-            const addZero = number => number < 10 ? `0${number}` : number
+
             if (date.total > 0) {
                 container.querySelector('#days').textContent = addZero(date.days)
                 container.querySelector('#hours').textContent = addZero(date.hours)
@@ -74,6 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.removeEventListener('scroll', openModalByScroll)
         setTimeout(() => {
             isOpening = false
+            modalElement.classList.remove('fade')
         }, 500);
     }
     const closeModal = () => {
@@ -142,15 +144,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     }
     const renderCard = () => {
-
         const getResources = async (url) => {
             const response = await fetch(url)
             return await response.json()
         }
         getResources('http://localhost:3000/menu')
             .then(data => {
-                data.forEach(({img,altimg,title,descr,price}) => {
-                    new MenuCard(img,altimg,title,descr,price).render()
+                data.forEach(({
+                    img,
+                    altimg,
+                    title,
+                    descr,
+                    price
+                }) => {
+                    new MenuCard(img, altimg, title, descr, price).render()
                 })
             })
     }
@@ -211,11 +218,51 @@ document.addEventListener('DOMContentLoaded', () => {
     formElements.forEach(item => bindpostData(item))
     /* /FORM MODULE */
 
+    /* SLIDER MODULE */
 
+    const slider = document.querySelector('.offer__slider'),
+        slides = slider.querySelectorAll('.offer__slide'),
+        sliderCounter = slider.querySelector('.offer__slider-counter'),
+        total = slider.querySelector('#total'),
+        current = slider.querySelector('#current'),
+        slidesWrapper = slider.querySelector('.offer__slider-wrapper'),
+        slidesField = slider.querySelector('.offer__slider-inner'),
+        slideWidth = window.getComputedStyle(slidesWrapper).width
 
+    let sliderIndex = 1
+    let offset = 0
+    total.textContent = addZero(slides.length)
+    current.textContent = addZero(sliderIndex)
 
+    slidesField.style.width = 100 * slides.length + '%'
+    slidesField.style.display = 'flex'
+    slidesField.style.transition = '0.5s all'
 
-
-
+    slidesWrapper.style.overflowX = 'hidden'
+    slides.forEach(slide => slide.style.width = slideWidth)
+    sliderCounter.addEventListener('click', event => {
+        const target = event.target
+        if (target.classList.contains('offer__slider-prev')) {
+            if (offset == 0) {
+                sliderIndex = slides.length
+                offset = +slideWidth.slice(0, slideWidth.length - 2) * (slides.length - 1)
+            } else {
+                offset -= +slideWidth.slice(0, slideWidth.length - 2)
+                sliderIndex--
+            }
+        }
+        if (target.classList.contains('offer__slider-next')) {
+            if (offset == +slideWidth.slice(0, slideWidth.length - 2) * (slides.length - 1)) {
+                sliderIndex = 1
+                offset = 0
+            } else {
+                sliderIndex++
+                offset += +slideWidth.slice(0, slideWidth.length - 2)
+            }
+        }
+        current.textContent = addZero(sliderIndex)
+        slidesField.style.transform = `translateX(-${offset}px)`
+    })
+    /* /SLIDER MODULE */
 
 })
