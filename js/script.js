@@ -230,7 +230,6 @@ document.addEventListener('DOMContentLoaded', () => {
         slideWidth = window.getComputedStyle(slidesWrapper).width
 
     let sliderIndex = 1
-    let offset = 0
     total.textContent = addZero(slides.length)
     current.textContent = addZero(sliderIndex)
 
@@ -240,29 +239,141 @@ document.addEventListener('DOMContentLoaded', () => {
 
     slidesWrapper.style.overflowX = 'hidden'
     slides.forEach(slide => slide.style.width = slideWidth)
+
+    slider.style.position = 'relative'
+    const indicators = document.createElement('ol'),
+        dots = []
+    const showDots = (n) => {
+        dots.forEach(dot => {
+            dot.style.opacity = '0.7'
+        })
+        dots[n - 1].style.opacity = '1'
+    }
+    const showSlide = (n) => {
+        const offset = +slideWidth.slice(0, slideWidth.length - 2) * (n - 1)
+        slidesField.style.transform = `translateX(-${offset}px)`
+        showDots(n)
+        current.textContent = addZero(n)
+    }
+    indicators.classList.add('carousel-indicators')
+
+    for (let i = 0; i < slides.length; i++) {
+        const dot = document.createElement('li')
+        dot.setAttribute('data-slider-to', i + 1)
+        dot.classList.add('dot')
+        indicators.append(dot)
+        if (i == 0) {
+            dot.style.opacity = '1'
+        }
+        dots.push(dot)
+    }
+    slider.append(indicators)
+    indicators.addEventListener('click', event => {
+
+        const target = event.target
+        if (target.classList.contains('dot')) {
+            sliderIndex = +target.getAttribute('data-slider-to')
+            showSlide(sliderIndex)
+        }
+    })
     sliderCounter.addEventListener('click', event => {
         const target = event.target
         if (target.classList.contains('offer__slider-prev')) {
-            if (offset == 0) {
-                sliderIndex = slides.length
-                offset = +slideWidth.slice(0, slideWidth.length - 2) * (slides.length - 1)
-            } else {
-                offset -= +slideWidth.slice(0, slideWidth.length - 2)
-                sliderIndex--
-            }
+            sliderIndex == 1 ? sliderIndex = slides.length : sliderIndex--
         }
         if (target.classList.contains('offer__slider-next')) {
-            if (offset == +slideWidth.slice(0, slideWidth.length - 2) * (slides.length - 1)) {
-                sliderIndex = 1
-                offset = 0
-            } else {
-                sliderIndex++
-                offset += +slideWidth.slice(0, slideWidth.length - 2)
-            }
+            sliderIndex == slides.length ? sliderIndex = 1 : sliderIndex++
         }
-        current.textContent = addZero(sliderIndex)
-        slidesField.style.transform = `translateX(-${offset}px)`
+        showSlide(sliderIndex)
+
     })
     /* /SLIDER MODULE */
+
+    /* CALC MODULE */
+    const chooseElements = document.querySelectorAll('.calculating__choose')
+    const data = {
+        height: 0,
+        weight: 0,
+        age: 0,
+        ratio: 1.35,
+        gender: 'female',
+        isFull() {
+            return (this.height && this.weight && this.age && this.ratio && this.gender) ? true : false
+        }
+    }
+    const res = document.querySelector('.calculating__result span')
+    const getStaticInformation = (parent) => {
+        document.querySelector(`${parent}`).addEventListener('click', (event) => {
+            const target = event.target
+            if (target.classList.contains('calculating__choose-item')) {
+                document.querySelectorAll(`${parent} div`).forEach(elem => {
+                    elem.classList.remove('calculating__choose-item_active')
+                })
+                target.classList.add('calculating__choose-item_active')
+                if (target.closest('#gender')) {
+                    data.gender = target.id
+                } else {
+                    data.ratio = +target.getAttribute('data-ratio')
+                }
+            }
+            // console.log(data);
+            data.isFull() && getResult(data)
+        })
+    }
+    const getDinamicIngormation = (selector) => {
+        document.querySelector(`${selector}`).addEventListener('input', event => {
+            data[event.target.id] = event.target.value
+            // console.log(data);
+            data.isFull() && getResult(data)
+        })
+
+    }
+    const getResult = ({
+        height,
+        weight,
+        age,
+        ratio,
+        gender
+    }) => {
+        const BMR = (9.99 * +weight) + (6.25 * +height) - (4.92 * +age) + (gender == 'male' ? 5 : -161)
+        res.textContent = Math.floor(BMR * +ratio)
+    }
+    getStaticInformation('#gender')
+    getStaticInformation('.calculating__choose_big')
+    getDinamicIngormation('#age')
+    getDinamicIngormation('#height')
+    getDinamicIngormation('#weight')
+
+    // document.querySelector('.calculating__choose_medium').addEventListener('change', event => {
+    //     data[`${event.target.id}`] = event.target.value
+    // })
+    // document.querySelectorAll('.calculating__choose-item').forEach(item => item.addEventListener('click', event => {
+    //     console.log(data);
+    //     
+    //     if (data.gender && data.height && data.ratio && data.weight && data.age) {
+    //         const BMR = (9.99 * +data.weight) + (6.25 * +data.height) - (4.92 * +data.age) + (data.gender == 'male' ? 5 : -161)
+    //         res.textContent = Math.floor(BMR * +data.ratio)
+    //     }
+
+    // }))
+
+
+    /*     const activeChoose = (parrent, target) =>{
+        parrent.querySelectorAll(`div`).forEach(item=>{
+            item.classList.remove('calculating__choose-item_active')
+        })
+        target.classList.add('calculating__choose-item_active')
+    }
+    chooseElements.forEach(choose => {
+        choose.addEventListener('click', event => {
+            if(event.target.classList.contains('calculating__choose-item')){
+                activeChoose(choose, event.target)
+            }
+        })
+    }) */
+
+
+    /* /CALC MODULE */
+
 
 })
